@@ -69,5 +69,36 @@ pipeline {
                 }
             }
         }
+          // Coverage stage to run coverage and publish Coverage report
+        stage('Coverage') {
+            steps {
+                echo 'Running coverage'
+                sh '''
+                    . .venv/bin/activate
+                    coverage run test.py 
+                    coverage report -m
+                    coverage xml -o reports/coverage.xml
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts 'reports/coverage.xml'
+                    cobertura(
+                        autoUpdateHealth: false,
+                        autoUpdateStability: false,
+                        coberturaReportFile: 'reports/coverage.xml',
+                        conditionalCoverageTargets: '70, 0, 0',
+                        failUnhealthy: false,
+                        failUnstable: false,
+                        lineCoverageTargets: '80, 0, 0',
+                        maxNumberOfBuilds: 0,
+                        methodCoverageTargets: '80, 0, 0',
+                        onlyStable: false,
+                        sourceEncoding: 'ASCII',
+                        zoomCoverageChart: false
+                    )
+                }
+            }
+        }
     }
 }

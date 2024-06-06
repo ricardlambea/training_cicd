@@ -53,5 +53,21 @@ pipeline {
                 }
             }
         }
+          // Unit tests stage to run PyTest and publish JUnit report
+        stage('Unit tests') {
+            steps {
+                echo 'Running Unit tests'
+                sh  '''
+                    . .venv/bin/activate
+                    python -m pytest --verbose --junit-xml reports/junit.xml test.py
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts 'reports/junit.xml'
+                    junit(testResults: 'reports/junit.xml', allowEmptyResults: false)
+                }
+            }
+        }
     }
 }

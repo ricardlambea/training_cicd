@@ -29,5 +29,29 @@ pipeline {
                 '''
             }
         }
+        // Static Analysis stage to run PyLint and publish report
+        stage('Static Analysis') {
+            steps {
+                echo "Running PyLint"
+                sh '''
+                    . .venv/bin/activate
+                    pylint -d C0301 -f parseable --reports=no main.py transform.py > pylint.log || echo "pylint exited with $?"
+                '''
+            }
+            environment {
+                PYLINTHOME = '.pylint.d'
+            }
+            post {
+                always {
+                    echo 'Publishing PyLint Report'
+                    sh 'cat pylint.log'
+                    recordIssues(
+                        healthy: 1, 
+                        tools: [pyLint(name: 'Python Project', pattern: '**/pylint.log')], 
+                        unhealthy: 2
+                    )
+                }
+            }
+        }
     }
 }

@@ -34,8 +34,60 @@ jobs:
         --user
     - name: Build a binary wheel and a source tarball
       run: python3 -m build
+      
     - name: Store the distribution packages
       uses: actions/upload-artifact@v3
       with:
          name: python-package-distributions
          path: dist/
+
+
+
+name: Pylint
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint pytest coverage    
+    - name: Analysing the code with pylint
+      run: |
+        pylint $(git ls-files '*.py')
+    - name: Test with pytest
+      run: |
+             pytest test.py
+             coverage run -m pytest test.py
+             coverage report
+    - name: Install pypa/build
+      run: >-
+        python3 -m
+        pip install
+        build
+        --user
+    - name: Build a binary wheel and a source tarball
+      run: python3 -m build
+
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v3
+      with:
+         name: python-package-distributions
+         path: dist/
+
+    - name: "Download python Modules - v4"
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
